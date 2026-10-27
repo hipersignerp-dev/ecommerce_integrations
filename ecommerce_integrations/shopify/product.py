@@ -363,7 +363,9 @@ def upload_erpnext_item(doc, method=None):
 		return
 
 	if doc.variant_of and not setting.upload_variants_as_items:
-		msgprint(_("Enable variant sync in setting to upload item to Shopify."))
+		# variants are pushed with their template by product_sync when that is enabled
+		if not cint(setting.get("push_variant_products")):
+			msgprint(_("Enable variant sync in setting to upload item to Shopify."))
 		return
 
 	if item.variant_of:

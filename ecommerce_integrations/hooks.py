@@ -110,22 +110,35 @@ doc_events = {
 	"Item": {
 		"before_insert": "ecommerce_integrations.shopify.master_defaults.before_insert",
 		"after_insert": "ecommerce_integrations.shopify.product.upload_erpnext_item",
-		"on_update": "ecommerce_integrations.shopify.product.upload_erpnext_item",
+		"on_update": [
+			"ecommerce_integrations.shopify.product.upload_erpnext_item",
+			"ecommerce_integrations.shopify.product_sync.on_item_update",
+		],
 		"validate": [
 			"ecommerce_integrations.utils.taxation.validate_tax_template",
 			"ecommerce_integrations.unicommerce.product.validate_item",
 		],
 	},
 	"Sales Order": {
-		"on_update_after_submit": "ecommerce_integrations.unicommerce.order.update_shipping_info",
-		"on_cancel": "ecommerce_integrations.unicommerce.status_updater.ignore_pick_list_on_sales_order_cancel",
+		"on_submit": "ecommerce_integrations.shopify.inventory_realtime.queue_inventory_push",
+		"on_update_after_submit": [
+			"ecommerce_integrations.unicommerce.order.update_shipping_info",
+			"ecommerce_integrations.shopify.inventory_realtime.queue_inventory_push",
+		],
+		"on_cancel": [
+			"ecommerce_integrations.unicommerce.status_updater.ignore_pick_list_on_sales_order_cancel",
+			"ecommerce_integrations.shopify.inventory_realtime.queue_inventory_push",
+		],
 	},
 	"Stock Entry": {
 		"validate": "ecommerce_integrations.unicommerce.grn.validate_stock_entry_for_grn",
 		"on_submit": "ecommerce_integrations.unicommerce.grn.upload_grn",
 		"on_cancel": "ecommerce_integrations.unicommerce.grn.prevent_grn_cancel",
 	},
-	"Item Price": {"on_change": "ecommerce_integrations.utils.price_list.discard_item_prices"},
+	"Item Price": {
+		"on_change": "ecommerce_integrations.utils.price_list.discard_item_prices",
+		"on_update": "ecommerce_integrations.shopify.product_sync.on_item_price_update",
+	},
 	"Pick List": {"validate": "ecommerce_integrations.unicommerce.pick_list.validate"},
 	"Sales Invoice": {
 		"on_submit": "ecommerce_integrations.unicommerce.invoice.on_submit",
@@ -138,6 +151,9 @@ doc_events = {
 	"Delivery Note": {
 		"on_submit": "ecommerce_integrations.shopify.fulfillment_push.on_delivery_note_submit",
 	},
+	"Stock Ledger Entry": {
+		"on_submit": "ecommerce_integrations.shopify.inventory_realtime.queue_inventory_push",
+	},
 }
 
 # Scheduled Tasks
@@ -146,7 +162,10 @@ doc_events = {
 scheduler_events = {
 	"all": ["ecommerce_integrations.shopify.inventory.update_inventory_on_shopify"],
 	"daily": [],
-	"daily_long": ["ecommerce_integrations.zenoti.doctype.zenoti_settings.zenoti_settings.sync_stocks"],
+	"daily_long": [
+		"ecommerce_integrations.zenoti.doctype.zenoti_settings.zenoti_settings.sync_stocks",
+		"ecommerce_integrations.shopify.reconcile.run_nightly_reconciliation",
+	],
 	"hourly": [
 		"ecommerce_integrations.shopify.order.sync_old_orders",
 		"ecommerce_integrations.amazon.doctype.amazon_sp_api_settings.amazon_sp_api_settings.schedule_get_order_details",

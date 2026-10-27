@@ -22,6 +22,11 @@ WEBHOOK_EVENTS = [
 	"orders/cancelled",
 	"orders/partially_fulfilled",
 	"refunds/create",
+	"products/create",
+	"products/update",
+	"products/delete",
+	"customers/update",
+	"customers/delete",
 ]
 
 EVENT_MAPPER = {
@@ -31,6 +36,11 @@ EVENT_MAPPER = {
 	"orders/cancelled": "ecommerce_integrations.shopify.order.cancel_order",
 	"orders/partially_fulfilled": "ecommerce_integrations.shopify.fulfillment.prepare_delivery_note",
 	"refunds/create": "ecommerce_integrations.shopify.refund.sync_refund",
+	"products/create": "ecommerce_integrations.shopify.product_sync.sync_product_webhook",
+	"products/update": "ecommerce_integrations.shopify.product_sync.sync_product_webhook",
+	"products/delete": "ecommerce_integrations.shopify.product_sync.delete_product_webhook",
+	"customers/update": "ecommerce_integrations.shopify.customer_sync.sync_customer_webhook",
+	"customers/delete": "ecommerce_integrations.shopify.customer_sync.delete_customer_webhook",
 }
 
 SHOPIFY_VARIANTS_ATTR_LIST = ["option1", "option2", "option3"]

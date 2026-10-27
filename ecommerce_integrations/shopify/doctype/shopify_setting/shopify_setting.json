@@ -52,6 +52,14 @@
   "column_break_rfm",
   "company_field_on_masters",
   "default_hsn_code",
+  "products_customers_section",
+  "sync_products_from_shopify",
+  "push_variant_products",
+  "shopify_price_list",
+  "column_break_pcs",
+  "sync_customers_from_shopify",
+  "payment_gateway_section",
+  "gateway_accounts",
   "erpnext_to_shopify_sync_section",
   "upload_erpnext_items",
   "update_shopify_item_on_update",
@@ -62,6 +70,9 @@
   "warehouse",
   "update_erpnext_stock_levels_to_shopify",
   "inventory_sync_frequency",
+  "instant_inventory_sync",
+  "nightly_reconciliation",
+  "reconciliation_days",
   "fetch_shopify_locations",
   "shopify_warehouse_mapping",
   "sync_old_orders_section",
@@ -329,6 +340,55 @@
    "label": "Default HSN Code"
   },
   {
+   "fieldname": "products_customers_section",
+   "fieldtype": "Section Break",
+   "label": "Products & Customers (Two-way)"
+  },
+  {
+   "default": "1",
+   "description": "Products created or edited in Shopify create/update Items and variants in ERPNext (name, description, archived status, prices). Deleted products are disabled.",
+   "fieldname": "sync_products_from_shopify",
+   "fieldtype": "Check",
+   "label": "Sync Product Changes from Shopify"
+  },
+  {
+   "default": "0",
+   "description": "Item templates with variants (e.g. size/colour) are pushed as one Shopify product with options. Needs \"Upload new ERPNext Items to Shopify\". Don't combine with \"Upload ERPNext Variants as Shopify Items\".",
+   "fieldname": "push_variant_products",
+   "fieldtype": "Check",
+   "label": "Push Variant Items as Shopify Options"
+  },
+  {
+   "description": "Selling prices are kept in step with Shopify on this price list in both directions.",
+   "fieldname": "shopify_price_list",
+   "fieldtype": "Link",
+   "label": "Shopify Price List",
+   "options": "Price List"
+  },
+  {
+   "fieldname": "column_break_pcs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Name, email, phone and default address changes in Shopify update the ERPNext Customer, Contact and Address. Deleted customers are disabled.",
+   "fieldname": "sync_customers_from_shopify",
+   "fieldtype": "Check",
+   "label": "Sync Customer Changes from Shopify"
+  },
+  {
+   "fieldname": "payment_gateway_section",
+   "fieldtype": "Section Break",
+   "label": "Payment Gateway Accounts",
+   "description": "Post payments and refunds of each Shopify payment gateway to its own account, so gateway settlements can be reconciled in Bank Reconciliation. Unmapped gateways use the Cash/Bank Account above."
+  },
+  {
+   "fieldname": "gateway_accounts",
+   "fieldtype": "Table",
+   "label": "Gateway Accounts",
+   "options": "Shopify Payment Gateway Account"
+  },
+  {
    "fieldname": "erpnext_to_shopify_sync_section",
    "fieldtype": "Section Break",
    "label": "ERPNext to Shopify Sync"
@@ -417,6 +477,28 @@
    "options": "5\n10\n15\n30\n60"
   },
   {
+   "default": "1",
+   "depends_on": "eval:doc.update_erpnext_stock_levels_to_shopify",
+   "description": "Push stock to Shopify right after every stock transaction or reservation change, in addition to the schedule above.",
+   "fieldname": "instant_inventory_sync",
+   "fieldtype": "Check",
+   "label": "Instant Stock Sync"
+  },
+  {
+   "default": "1",
+   "description": "Every night, replay any Shopify order, payment, fulfilment, cancellation or refund that ERPNext missed, and re-send all stock levels.",
+   "fieldname": "nightly_reconciliation",
+   "fieldtype": "Check",
+   "label": "Nightly Reconciliation"
+  },
+  {
+   "default": "3",
+   "depends_on": "eval:doc.nightly_reconciliation",
+   "fieldname": "reconciliation_days",
+   "fieldtype": "Int",
+   "label": "Reconcile Orders Updated in Last (Days)"
+  },
+  {
    "fieldname": "last_inventory_sync",
    "fieldtype": "Datetime",
    "hidden": 1,
@@ -488,7 +570,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-10-27 21:45:00.000000",
+ "modified": "2026-10-27 22:05:00.000000",
  "modified_by": "Administrator",
  "module": "shopify",
  "name": "Shopify Setting",

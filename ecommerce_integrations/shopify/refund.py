@@ -333,8 +333,15 @@ def make_refund_payment(credit_note, refunded_amount, setting, refund) -> str:
 
 	posting_date = getdate(refund.get("processed_at") or refund.get("created_at")) or nowdate()
 
+	from ecommerce_integrations.shopify.invoice import get_payment_account
+
+	gateways = [
+		t.get("gateway")
+		for t in refund.get("transactions") or []
+		if t.get("kind") == "refund" and t.get("status") == "success"
+	]
 	payment_entry = get_payment_entry(
-		credit_note.doctype, credit_note.name, bank_account=setting.cash_bank_account
+		credit_note.doctype, credit_note.name, bank_account=get_payment_account(setting, gateways)
 	)
 	payment_entry.flags.ignore_mandatory = True
 	payment_entry.reference_no = cstr(refund.get("id"))

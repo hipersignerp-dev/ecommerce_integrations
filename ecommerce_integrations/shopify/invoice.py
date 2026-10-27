@@ -53,7 +53,12 @@ def create_sales_invoice(shopify_order, setting, so):
 		sales_invoice.insert(ignore_mandatory=True)
 		sales_invoice.submit()
 		if sales_invoice.grand_total > 0:
-			make_payament_entry_against_sales_invoice(sales_invoice, setting, posting_date)
+			make_payament_entry_against_sales_invoice(
+				sales_invoice,
+				setting,
+				posting_date,
+				bank_account=get_payment_account(setting, shopify_order.get("payment_gateway_names")),
+			)
 
 		if shopify_order.get("note"):
 			sales_invoice.add_comment(text=f"Order Note: {shopify_order.get('note')}")
@@ -64,10 +69,29 @@ def set_cost_center(items, cost_center):
 		item.cost_center = cost_center
 
 
-def make_payament_entry_against_sales_invoice(doc, setting, posting_date=None):
+def get_payment_account(setting, gateways) -> str:
+	"""Account mapped to the order's payment gateway in Shopify Setting, else Cash/Bank Account.
+
+	Mapping each gateway (Razorpay, COD, ...) to its own clearing account lets settlements be
+	reconciled per gateway in ERPNext's bank reconciliation.
+	"""
+	if isinstance(gateways, str):
+		gateways = [gateways]
+	mapping = {
+		cstr(row.gateway).strip().lower(): row.account for row in setting.get("gateway_accounts") or []
+	}
+	for gateway in gateways or []:
+		if account := mapping.get(cstr(gateway).strip().lower()):
+			return account
+	return setting.cash_bank_account
+
+
+def make_payament_entry_against_sales_invoice(doc, setting, posting_date=None, bank_account=None):
 	from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
-	payment_entry = get_payment_entry(doc.doctype, doc.name, bank_account=setting.cash_bank_account)
+	payment_entry = get_payment_entry(
+		doc.doctype, doc.name, bank_account=bank_account or setting.cash_bank_account
+	)
 	payment_entry.flags.ignore_mandatory = True
 	payment_entry.reference_no = doc.name
 	payment_entry.posting_date = posting_date or nowdate()
