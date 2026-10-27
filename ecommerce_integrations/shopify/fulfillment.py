@@ -37,11 +37,12 @@ def create_delivery_note(shopify_order, setting, so):
 	if not cint(setting.sync_delivery_note):
 		return
 
+	# local import: fulfillment_push imports from this package at module level
+	from ecommerce_integrations.shopify.fulfillment_push import is_fulfillment_synced
+
 	for fulfillment in shopify_order.get("fulfillments"):
-		if (
-			not frappe.db.get_value("Delivery Note", {FULLFILLMENT_ID_FIELD: fulfillment.get("id")}, "name")
-			and so.docstatus == 1
-		):
+		# also skips fulfillments that ERPNext itself pushed (or is pushing) to Shopify
+		if not is_fulfillment_synced(shopify_order.get("id"), fulfillment.get("id")) and so.docstatus == 1:
 			dn = make_delivery_note(so.name)
 			setattr(dn, ORDER_ID_FIELD, fulfillment.get("order_id"))
 			setattr(dn, ORDER_NUMBER_FIELD, shopify_order.get("name"))

@@ -27,7 +27,9 @@ from ecommerce_integrations.shopify.constants import (
 	ORDER_ITEM_DISCOUNT_FIELD,
 	ORDER_NUMBER_FIELD,
 	ORDER_STATUS_FIELD,
+	REFUND_ID_FIELD,
 	SUPPLIER_ID_FIELD,
+	WEBHOOK_EVENTS,
 )
 from ecommerce_integrations.shopify.oauth import (
 	get_valid_access_token,
@@ -141,8 +143,13 @@ class ShopifySetting(SettingController):
 
 		if self.webhooks and self._webhook_owner_changed():
 			self._move_webhooks_to_new_owner()
-		elif not self.webhooks:
+		elif not self.webhooks or self._missing_webhook_topics():
+			# also re-registers when a newer app version subscribes to more topics
+			self.webhooks = []
 			self._register_webhooks()
+
+	def _missing_webhook_topics(self) -> set[str]:
+		return set(WEBHOOK_EVENTS) - {w.method for w in self.webhooks}
 
 	def _move_webhooks_to_new_owner(self):
 		"""Webhooks are signed with the registering app's secret, so they must move with the app.
@@ -359,6 +366,15 @@ def setup_custom_fields():
 				read_only=1,
 				print_hide=1,
 			),
+			dict(
+				fieldname=REFUND_ID_FIELD,
+				label="Shopify Refund Id",
+				fieldtype="Data",
+				insert_after=FULLFILLMENT_ID_FIELD,
+				read_only=1,
+				print_hide=1,
+				no_copy=1,
+			),
 		],
 		"Sales Invoice": [
 			dict(
@@ -384,6 +400,15 @@ def setup_custom_fields():
 				insert_after=ORDER_ID_FIELD,
 				read_only=1,
 				print_hide=1,
+			),
+			dict(
+				fieldname=REFUND_ID_FIELD,
+				label="Shopify Refund Id",
+				fieldtype="Data",
+				insert_after=ORDER_STATUS_FIELD,
+				read_only=1,
+				print_hide=1,
+				no_copy=1,
 			),
 		],
 	}

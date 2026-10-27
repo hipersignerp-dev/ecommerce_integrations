@@ -368,6 +368,10 @@ def cancel_order(payload, request_id=None):
 	Updates document with custom field showing order status.
 
 	IF sales invoice / delivery notes are not generated against an order, then cancel it.
+
+	Otherwise every linked document is stamped "cancelled (<payment status>)" and the Sales Order
+	is closed, so its undelivered quantity stops reserving stock. Money and goods are reversed by
+	the refunds/create webhook (see shopify/refund.py), which Shopify sends for the refund.
 	"""
 	frappe.set_user("Administrator")
 	frappe.flags.request_id = request_id
@@ -376,7 +380,7 @@ def cancel_order(payload, request_id=None):
 
 	try:
 		order_id = order["id"]
-		order_status = order["financial_status"]
+		order_status = f"cancelled ({order['financial_status']})"
 
 		sales_order = get_sales_order(order_id)
 
@@ -384,24 +388,33 @@ def cancel_order(payload, request_id=None):
 			create_shopify_log(status="Invalid", message="Sales Order does not exist")
 			return
 
-		sales_invoice = frappe.db.get_value("Sales Invoice", filters={ORDER_ID_FIELD: order_id})
-		delivery_notes = frappe.db.get_list("Delivery Note", filters={ORDER_ID_FIELD: order_id})
+		sales_invoices = frappe.db.get_list(
+			"Sales Invoice", filters={ORDER_ID_FIELD: cstr(order_id), "docstatus": ("<", 2)}, pluck="name"
+		)
+		delivery_notes = frappe.db.get_list(
+			"Delivery Note", filters={ORDER_ID_FIELD: cstr(order_id), "docstatus": ("<", 2)}, pluck="name"
+		)
 
-		if sales_invoice:
+		for sales_invoice in sales_invoices:
 			frappe.db.set_value("Sales Invoice", sales_invoice, ORDER_STATUS_FIELD, order_status)
 
 		for dn in delivery_notes:
-			frappe.db.set_value("Delivery Note", dn.name, ORDER_STATUS_FIELD, order_status)
+			frappe.db.set_value("Delivery Note", dn, ORDER_STATUS_FIELD, order_status)
 
-		if not sales_invoice and not delivery_notes and sales_order.docstatus == 1:
+		message = None
+		if not sales_invoices and not delivery_notes and sales_order.docstatus == 1:
 			sales_order.cancel()
+			message = f"Sales Order {sales_order.name} cancelled."
 		else:
 			frappe.db.set_value("Sales Order", sales_order.name, ORDER_STATUS_FIELD, order_status)
+			if sales_order.docstatus == 1 and sales_order.status not in ("Completed", "Closed"):
+				sales_order.update_status("Closed")
+				message = f"Sales Order {sales_order.name} closed; refunds sync as credit notes."
 
 	except Exception as e:
-		create_shopify_log(status="Error", exception=e)
+		create_shopify_log(status="Error", exception=e, rollback=True)
 	else:
-		create_shopify_log(status="Success")
+		create_shopify_log(status="Success", message=message)
 
 
 @temp_shopify_session

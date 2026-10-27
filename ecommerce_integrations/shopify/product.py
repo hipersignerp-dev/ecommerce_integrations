@@ -58,7 +58,14 @@ class ShopifyProduct:
 		if not self.is_synced():
 			shopify_product = Product.find(self.product_id)
 			product_dict = shopify_product.to_dict()
-			self._make_item(product_dict)
+
+			# lets master_defaults recognise the Items / Item Groups / Suppliers created here
+			previous = frappe.flags.in_shopify_product_sync
+			frappe.flags.in_shopify_product_sync = True
+			try:
+				self._make_item(product_dict)
+			finally:
+				frappe.flags.in_shopify_product_sync = previous
 
 	def _make_item(self, product_dict):
 		_add_weight_details(product_dict)

@@ -108,6 +108,7 @@ before_uninstall = "ecommerce_integrations.uninstall.before_uninstall"
 
 doc_events = {
 	"Item": {
+		"before_insert": "ecommerce_integrations.shopify.master_defaults.before_insert",
 		"after_insert": "ecommerce_integrations.shopify.product.upload_erpnext_item",
 		"on_update": "ecommerce_integrations.shopify.product.upload_erpnext_item",
 		"validate": [
@@ -129,6 +130,13 @@ doc_events = {
 	"Sales Invoice": {
 		"on_submit": "ecommerce_integrations.unicommerce.invoice.on_submit",
 		"on_cancel": "ecommerce_integrations.unicommerce.invoice.on_cancel",
+	},
+	# Hipersign extensions
+	"Customer": {"before_insert": "ecommerce_integrations.shopify.master_defaults.before_insert"},
+	"Supplier": {"before_insert": "ecommerce_integrations.shopify.master_defaults.before_insert"},
+	"Item Group": {"before_insert": "ecommerce_integrations.shopify.master_defaults.before_insert"},
+	"Delivery Note": {
+		"on_submit": "ecommerce_integrations.shopify.fulfillment_push.on_delivery_note_submit",
 	},
 }
 

@@ -45,6 +45,13 @@
   "default_sales_tax_account",
   "column_break_qibo",
   "default_shipping_charges_account",
+  "refunds_fulfilment_section",
+  "sync_refunds",
+  "push_delivery_note_to_shopify",
+  "notify_customer_on_fulfillment",
+  "column_break_rfm",
+  "company_field_on_masters",
+  "default_hsn_code",
   "erpnext_to_shopify_sync_section",
   "upload_erpnext_items",
   "update_shopify_item_on_update",
@@ -280,6 +287,48 @@
    "options": "Shopify Tax Account"
   },
   {
+   "fieldname": "refunds_fulfilment_section",
+   "fieldtype": "Section Break",
+   "label": "Refunds, Fulfilment & Masters"
+  },
+  {
+   "default": "1",
+   "description": "Shopify refunds create a credit note against the order's invoice, a stock return for restocked items that were delivered, and a refund payment.",
+   "fieldname": "sync_refunds",
+   "fieldtype": "Check",
+   "label": "Create Credit Notes for Shopify Refunds"
+  },
+  {
+   "default": "0",
+   "description": "Delivery Notes made in ERPNext for Shopify orders are fulfilled in Shopify. Transport Receipt No is sent as the tracking number and Transporter Name as the carrier.",
+   "fieldname": "push_delivery_note_to_shopify",
+   "fieldtype": "Check",
+   "label": "Fulfil Shopify Order on Delivery Note Submit"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.push_delivery_note_to_shopify",
+   "fieldname": "notify_customer_on_fulfillment",
+   "fieldtype": "Check",
+   "label": "Send Shipping Email to Customer"
+  },
+  {
+   "fieldname": "column_break_rfm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Fieldname of a company link on Customer, Supplier, Item and Item Group (e.g. custom_company). Records created by the Shopify sync get the company above. Leave empty if your site has no such field.",
+   "fieldname": "company_field_on_masters",
+   "fieldtype": "Data",
+   "label": "Company Field on Masters"
+  },
+  {
+   "description": "Used for Items synced from Shopify when their Item Group has no HSN code.",
+   "fieldname": "default_hsn_code",
+   "fieldtype": "Data",
+   "label": "Default HSN Code"
+  },
+  {
    "fieldname": "erpnext_to_shopify_sync_section",
    "fieldtype": "Section Break",
    "label": "ERPNext to Shopify Sync"
@@ -439,7 +488,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-28 14:52:59.407561",
+ "modified": "2026-10-27 21:45:00.000000",
  "modified_by": "Administrator",
  "module": "shopify",
  "name": "Shopify Setting",
