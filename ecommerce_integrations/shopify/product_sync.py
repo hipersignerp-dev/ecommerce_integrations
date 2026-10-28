@@ -32,6 +32,7 @@ from ecommerce_integrations.shopify.constants import (
 	SETTING_DOCTYPE,
 	SHOPIFY_VARIANTS_ATTR_LIST,
 )
+from ecommerce_integrations.shopify.master_defaults import belongs_to_shopify_company
 from ecommerce_integrations.shopify.utils import create_shopify_log
 
 PUSH_PRODUCT_METHOD = "ecommerce_integrations.shopify.product_sync.push_product_with_variants"
@@ -262,7 +263,7 @@ def on_item_update(doc, method=None):
 	"""Item on_update: push templates/variants as one Shopify product with options."""
 	if _is_echo(doc) or not (doc.has_variants or doc.variant_of):
 		return
-	if not _push_enabled():
+	if not _push_enabled() or not belongs_to_shopify_company(doc):
 		return
 
 	template = doc.name if doc.has_variants else doc.variant_of
@@ -279,7 +280,7 @@ def on_item_price_update(doc, method=None):
 		return
 
 	item = frappe.db.get_value("Item", doc.item_code, ["has_variants", "variant_of"], as_dict=True)
-	if not item:
+	if not item or not belongs_to_shopify_company(doc.item_code, setting):
 		return
 
 	if (item.has_variants or item.variant_of) and _push_enabled():

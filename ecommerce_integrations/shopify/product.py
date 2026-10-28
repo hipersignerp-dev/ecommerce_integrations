@@ -352,6 +352,12 @@ def upload_erpnext_item(doc, method=None):
 	if not setting.is_enabled() or not setting.upload_erpnext_items:
 		return
 
+	# multi-company sites: never push other companies' items
+	from ecommerce_integrations.shopify.master_defaults import belongs_to_shopify_company
+
+	if not belongs_to_shopify_company(item, setting):
+		return
+
 	if frappe.flags.in_import:
 		return
 

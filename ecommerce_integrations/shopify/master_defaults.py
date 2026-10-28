@@ -76,3 +76,22 @@ def _set_hsn_code(doc, setting):
 	hsn = hsn or cstr(setting.get("default_hsn_code")).strip()
 	if hsn:
 		doc.set(HSN_FIELD, hsn)
+
+
+def belongs_to_shopify_company(item, setting=None) -> bool:
+	"""On multi-company sites, only items of the Shopify company may be pushed to Shopify.
+
+	``item`` is an Item doc or item code. Without a "Company Field on Masters" every item counts.
+	"""
+	setting = setting or frappe.get_cached_doc(SETTING_DOCTYPE)
+	fieldname = cstr(setting.get("company_field_on_masters")).strip()
+	if not fieldname or not frappe.get_meta("Item").has_field(fieldname):
+		return True
+
+	if isinstance(item, str):
+		company = frappe.db.get_value("Item", item, fieldname)
+	else:
+		company = item.get(fieldname)
+		if not company and item.get("variant_of"):
+			company = frappe.db.get_value("Item", item.variant_of, fieldname)
+	return company == setting.company
