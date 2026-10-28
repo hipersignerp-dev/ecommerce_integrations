@@ -320,6 +320,14 @@ def _push_enabled() -> bool:
 
 
 def _queue_product_push(template):
+	# Saving a template makes ERPNext re-save each variant in the same request, and each save
+	# lands here. deduplicate only sees jobs already in the queue, and enqueue_after_commit
+	# defers them all to commit, so without this every variant would queue its own push.
+	queued = frappe.flags.setdefault("shopify_product_push_queued", set())
+	if template in queued:
+		return
+	queued.add(template)
+
 	frappe.enqueue(
 		PUSH_PRODUCT_METHOD,
 		queue="short",
