@@ -161,6 +161,7 @@ def make_credit_note(invoice, refund, line_items, setting):
 
 	credit_note.set("items", items)
 	credit_note.update_stock = 0
+	credit_note.disable_rounded_total = 1  # refund exactly what Shopify refunded
 	credit_note.set(REFUND_ID_FIELD, refund_id)
 	credit_note.set(ORDER_ID_FIELD, cstr(refund.get("order_id")))
 	credit_note.naming_series = setting.sales_invoice_series or credit_note.naming_series

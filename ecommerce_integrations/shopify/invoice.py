@@ -47,6 +47,9 @@ def create_sales_invoice(shopify_order, setting, so):
 		sales_invoice.posting_date = posting_date
 		sales_invoice.due_date = posting_date
 		sales_invoice.naming_series = setting.sales_invoice_series or "SI-Shopify-"
+		# Shopify charges exact amounts; rounding would leave paise differences against the
+		# gateway settlement in bank reconciliation
+		sales_invoice.disable_rounded_total = 1
 		sales_invoice.flags.ignore_mandatory = True
 		set_cost_center(sales_invoice.items, setting.cost_center)
 		copy_item_wise_tax_details(sales_invoice, so.name)
