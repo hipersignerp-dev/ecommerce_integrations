@@ -332,10 +332,17 @@ def _queue_product_push(template):
 
 
 def push_product_with_variants(template):
+	from frappe.utils.synchronization import filelock
+
 	frappe.set_user("Administrator")
 	frappe.flags.request_id = None
 	try:
-		message = _push_product(template)
+		# Saving a template re-saves its variants, which queues several pushes; dedup only
+		# stops queued duplicates, so serialise the running ones and commit the product link
+		# before the next push reads it (otherwise two pushes each create a product).
+		with filelock(f"shopify_product_push_{frappe.scrub(template)}", timeout=120):
+			message = _push_product(template)
+			frappe.db.commit()
 	except Exception as e:
 		frappe.db.rollback()
 		create_shopify_log(
