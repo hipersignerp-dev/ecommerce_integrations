@@ -27,6 +27,17 @@ def queue_inventory_push(doc=None, method=None):
 	if not _instant_sync_enabled():
 		return
 
+	# One document posts many ledger entries and fires several hooks. deduplicate only sees
+	# jobs already in the queue, and enqueue_after_commit defers them all to commit, so queue
+	# at most one push per request; it sends every item changed since its last sync.
+	# The flag is cleared on commit/rollback, so a job that commits several times (order sync:
+	# order, invoice, delivery) still queues a push after each one.
+	if frappe.flags.get("shopify_inventory_push_queued"):
+		return
+	frappe.flags.shopify_inventory_push_queued = True
+	frappe.db.after_commit.add(_clear_push_flag)
+	frappe.db.after_rollback.add(_clear_push_flag)
+
 	frappe.enqueue(
 		PUSH_METHOD,
 		queue="short",
@@ -35,6 +46,10 @@ def queue_inventory_push(doc=None, method=None):
 		deduplicate=True,
 		enqueue_after_commit=True,
 	)
+
+
+def _clear_push_flag():
+	frappe.flags.shopify_inventory_push_queued = False
 
 
 def queue_inventory_push_if_submitted(doc, method=None):
