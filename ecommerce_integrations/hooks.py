@@ -129,6 +129,8 @@ doc_events = {
 			"ecommerce_integrations.unicommerce.status_updater.ignore_pick_list_on_sales_order_cancel",
 			"ecommerce_integrations.shopify.inventory_realtime.queue_inventory_push",
 		],
+		# Close / Re-open / Hold change reservations through db_set, which only fires on_change
+		"on_change": "ecommerce_integrations.shopify.inventory_realtime.queue_inventory_push_if_submitted",
 	},
 	"Stock Entry": {
 		"validate": "ecommerce_integrations.unicommerce.grn.validate_stock_entry_for_grn",

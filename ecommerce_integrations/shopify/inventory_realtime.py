@@ -37,6 +37,12 @@ def queue_inventory_push(doc=None, method=None):
 	)
 
 
+def queue_inventory_push_if_submitted(doc, method=None):
+	"""Sales Order on_change: status changes (Close, Re-open, Hold) release or re-reserve stock."""
+	if doc.docstatus == 1:
+		queue_inventory_push(doc, method)
+
+
 def push_changed_inventory(force_all: bool = False):
 	"""Push every Shopify-linked item whose stock changed since its last sync.
 
