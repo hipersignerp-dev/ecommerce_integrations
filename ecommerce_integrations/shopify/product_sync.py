@@ -261,6 +261,12 @@ def _set_item_price(item_code, price_list, rate) -> bool:
 
 def on_item_update(doc, method=None):
 	"""Item on_update: push templates/variants as one Shopify product with options."""
+	if doc.has_value_changed("item_name"):
+		# keep the Item Name column on Ecommerce Item current
+		frappe.db.set_value(
+			"Ecommerce Item", {"erpnext_item_code": doc.name}, "item_name", doc.item_name, update_modified=False
+		)
+
 	if _is_echo(doc) or not (doc.has_variants or doc.variant_of):
 		return
 	if not _push_enabled() or not belongs_to_shopify_company(doc):

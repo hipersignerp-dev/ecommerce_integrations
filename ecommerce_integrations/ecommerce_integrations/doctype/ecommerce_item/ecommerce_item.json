@@ -7,6 +7,7 @@
  "field_order": [
   "integration",
   "erpnext_item_code",
+  "item_name",
   "integration_item_code",
   "sku",
   "column_break_5",
@@ -17,6 +18,16 @@
   "item_synced_on"
  ],
  "fields": [
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name",
+   "read_only": 1,
+   "fetch_from": "erpnext_item_code.item_name",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "bold": 1
+  },
   {
    "fieldname": "erpnext_item_code",
    "fieldtype": "Link",
@@ -31,7 +42,7 @@
   {
    "fieldname": "integration",
    "fieldtype": "Link",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "in_standard_filter": 1,
    "label": "Integration",
    "options": "Module Def",
@@ -74,7 +85,9 @@
    "fieldtype": "Data",
    "label": "SKU",
    "read_only": 1,
-   "search_index": 1
+   "search_index": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "inventory_synced_on",
@@ -95,7 +108,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-11-15 11:36:04.733227",
+ "modified": "2026-10-29 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Ecommerce Integrations",
  "name": "Ecommerce Item",
@@ -117,5 +130,8 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1
+ "track_changes": 1,
+ "title_field": "item_name",
+ "search_fields": "item_name,sku",
+ "show_title_field_in_link": 0
 }
