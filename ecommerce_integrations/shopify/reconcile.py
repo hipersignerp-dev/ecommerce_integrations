@@ -112,8 +112,8 @@ def reconcile_order(order) -> list[str]:
 		if order.get("cancelled_at") and order.get("financial_status") not in PAID_STATUSES:
 			return actions  # cancelled before anything happened: nothing to record
 
-		_replay("orders/create", sync_sales_order, order)
-		actions.append("created sales order")
+		ok = _replay("orders/create", sync_sales_order, order)
+		actions.append(_outcome("created sales order", ok))
 		return actions  # sync_sales_order also invoices and delivers
 
 	if sales_order.docstatus == 2:
@@ -122,8 +122,8 @@ def reconcile_order(order) -> list[str]:
 	if order.get("financial_status") in PAID_STATUSES and not frappe.db.exists(
 		"Sales Invoice", {ORDER_ID_FIELD: order_id, "docstatus": 1, "is_return": 0}
 	):
-		_replay("orders/paid", prepare_sales_invoice, order)
-		actions.append("created sales invoice")
+		ok = _replay("orders/paid", prepare_sales_invoice, order)
+		actions.append(_outcome("created sales invoice", ok))
 
 	missing_fulfillments = [
 		f
@@ -131,12 +131,12 @@ def reconcile_order(order) -> list[str]:
 		if f.get("status") == "success" and not is_fulfillment_synced(order_id, f.get("id"))
 	]
 	if missing_fulfillments:
-		_replay("orders/fulfilled", prepare_delivery_note, order)
-		actions.append(f"created delivery note for {len(missing_fulfillments)} fulfilment(s)")
+		ok = _replay("orders/fulfilled", prepare_delivery_note, order)
+		actions.append(_outcome(f"created delivery note for {len(missing_fulfillments)} fulfilment(s)", ok))
 
 	if order.get("cancelled_at") and not cstr(sales_order.get(ORDER_STATUS_FIELD)).startswith("cancelled"):
-		_replay("orders/cancelled", cancel_order, order)
-		actions.append("applied cancellation")
+		ok = _replay("orders/cancelled", cancel_order, order)
+		actions.append(_outcome("applied cancellation", ok))
 
 	for refund in order.get("refunds") or []:
 		has_items = any(flt(rli.get("quantity")) for rli in refund.get("refund_line_items") or [])
@@ -144,14 +144,20 @@ def reconcile_order(order) -> list[str]:
 			"Sales Invoice", {REFUND_ID_FIELD: cstr(refund.get("id")), "docstatus": ("<", 2)}
 		):
 			refund.setdefault("order_id", order.get("id"))
-			_replay("refunds/create", sync_refund, refund)
-			actions.append(f"synced refund {refund.get('id')}")
+			ok = _replay("refunds/create", sync_refund, refund)
+			actions.append(_outcome(f"synced refund {refund.get('id')}", ok))
 
 	return actions
 
 
+def _outcome(action, ok):
+	return action if ok else f"{action} FAILED (see its Error log)"
+
+
 def _replay(topic, handler, payload):
-	"""Run a webhook handler synchronously with its own log, like a delivered webhook."""
+	"""Run a webhook handler synchronously with its own log, like a delivered webhook.
+
+	Returns False when the handler logged an error."""
 	log = create_shopify_log(
 		method=EVENT_MAPPER[topic],
 		request_data=json.dumps(payload),
@@ -160,3 +166,4 @@ def _replay(topic, handler, payload):
 	)
 	handler(payload, request_id=log.name)
 	frappe.flags.request_id = None
+	return frappe.db.get_value("Ecommerce Integration Log", log.name, "status") != "Error"

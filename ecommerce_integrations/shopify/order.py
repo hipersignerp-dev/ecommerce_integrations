@@ -408,6 +408,8 @@ def cancel_order(payload, request_id=None):
 		else:
 			frappe.db.set_value("Sales Order", sales_order.name, ORDER_STATUS_FIELD, order_status)
 			if sales_order.docstatus == 1 and sales_order.status not in ("Completed", "Closed"):
+				# set_value bumped `modified`; update_status checks it against the loaded doc
+				sales_order.reload()
 				sales_order.update_status("Closed")
 				message = f"Sales Order {sales_order.name} closed; refunds sync as credit notes."
 
