@@ -58,6 +58,20 @@ def queue_inventory_push_if_submitted(doc, method=None):
 		queue_inventory_push(doc, method)
 
 
+@frappe.whitelist()
+def push_all_stock_now():
+	"""Button in Shopify Setting: re-send stock for every linked item."""
+	frappe.only_for("System Manager")
+	frappe.enqueue(
+		PUSH_METHOD,
+		queue="long",
+		timeout=3600,
+		job_id="shopify_full_inventory_push",
+		deduplicate=True,
+		force_all=True,
+	)
+
+
 def push_changed_inventory(force_all: bool = False):
 	"""Push every Shopify-linked item whose stock changed since its last sync.
 

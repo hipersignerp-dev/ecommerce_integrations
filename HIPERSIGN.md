@@ -35,3 +35,11 @@ custom fields and registers the new webhooks (refunds, products, customers).
   Variants as Shopify Items*.
 - Shopify Payments payouts are not used: it isn't available to Indian stores. Settlements from
   Razorpay etc. are reconciled through the gateway clearing accounts.
+
+## Shopify workspace
+
+Desk → **Shopify**: today's orders, orders to ship, this month's Shopify sales and sync errors
+(number cards), a daily sales chart, shortcuts (orders to ship, all orders, invoices, sync
+errors, product links, settings) and link cards for orders, products & stock, customers and
+setup. Shopify Setting has a **Sync** menu: *Run Reconciliation Now* and *Resend All Stock to
+Shopify*.

@@ -34,6 +34,38 @@ frappe.ui.form.on("Shopify Setting", {
 				integration: "Shopify",
 			});
 		});
+		if (frm.doc.enable_shopify && !frm.is_dirty()) {
+			frm.add_custom_button(
+				__("Run Reconciliation Now"),
+				() => {
+					frappe.call({
+						method: "ecommerce_integrations.shopify.reconcile.run_now",
+						callback: () =>
+							frappe.show_alert({
+								message: __(
+									"Reconciliation queued. The summary appears in the Ecommerce Integration Log.",
+								),
+								indicator: "green",
+							}),
+					});
+				},
+				__("Sync"),
+			);
+			frm.add_custom_button(
+				__("Resend All Stock to Shopify"),
+				() => {
+					frappe.call({
+						method: "ecommerce_integrations.shopify.inventory_realtime.push_all_stock_now",
+						callback: () =>
+							frappe.show_alert({
+								message: __("Stock push queued for every linked item."),
+								indicator: "green",
+							}),
+					});
+				},
+				__("Sync"),
+			);
+		}
 		frm.trigger("setup_queries");
 	},
 
