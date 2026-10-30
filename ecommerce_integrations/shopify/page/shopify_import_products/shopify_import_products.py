@@ -58,11 +58,23 @@ def _fetch_products_from_shopify(from_=None, limit=20):
 
 @frappe.whitelist()
 def get_product_count():
-	items = frappe.db.get_list("Item", {"variant_of": ["is", "not set"]})
-	erpnext_count = len(items)
+	# Hipersign: on a multi-company site count only the Shopify company's products, and count
+	# synced Shopify products (not one row per variant).
+	setting = frappe.get_cached_doc("Shopify Setting")
+	item_filters = {"variant_of": ["is", "not set"], "disabled": 0}
+	company_field = (setting.get("company_field_on_masters") or "").strip()
+	if company_field and frappe.get_meta("Item").has_field(company_field):
+		item_filters[company_field] = setting.company
+	erpnext_count = frappe.db.count("Item", item_filters)
 
-	sync_items = frappe.db.get_list("Ecommerce Item", {"variant_of": ["is", "not set"]})
-	synced_count = len(sync_items)
+	synced_count = len(
+		frappe.get_all(
+			"Ecommerce Item",
+			filters={"integration": MODULE_NAME},
+			pluck="integration_item_code",
+			distinct=True,
+		)
+	)
 
 	shopify_count = get_shopify_product_count()
 
